@@ -1,0 +1,50 @@
+body {
+  font-family: sans-serif;
+  padding: 15px;
+  background: #f9f9f9;
+}
+
+#timer {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+#timer-display {
+  font-size: 2em;
+  margin: 10px 0;
+}
+
+button {
+  background: #4CAF50;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  margin: 5px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+button:hover {
+  background: #45a049;
+}
+
+#task-list {
+  list-style: none;
+  padding: 0;
+}
+
+#task-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #fff;
+  margin: 5px 0;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+#task-list li button {
+  background: #e74c3c;
+  padding: 4px 8px;
+}
