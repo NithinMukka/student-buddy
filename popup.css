@@ -1,50 +1,173 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+:root {
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
+  --bg: #1e1e2e;
+  --card-bg: #2b2b3b;
+  --text: #ffffff;
+  --text-muted: #a1a1aa;
+  --danger: #ef4444;
+}
+
 body {
-  font-family: sans-serif;
-  padding: 15px;
-  background: #f9f9f9;
+  width: 350px;
+  height: 450px;
+  margin: 0;
+  padding: 20px;
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
 }
 
 #timer {
   text-align: center;
+  background: var(--card-bg);
+  padding: 30px;
+  border-radius: 16px;
   margin-bottom: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 #timer-display {
-  font-size: 2em;
-  margin: 10px 0;
+  font-size: 3.5rem;
+  font-weight: 700;
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
+  margin-bottom: 20px;
+  background: linear-gradient(to right, #818cf8, #c4b5fd);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-button {
-  background: #4CAF50;
+button#start {
+  background-color: var(--primary);
   color: white;
   border: none;
-  padding: 6px 12px;
-  margin: 5px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  font-weight: 600;
+  border-radius: 8px;
   cursor: pointer;
-  border-radius: 4px;
+  transition: all 0.2s;
+  width: 100%;
 }
 
-button:hover {
-  background: #45a049;
+button#start:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
 }
 
-#task-list {
+button#start.stop-mode {
+  background-color: var(--danger);
+}
+
+button#start.stop-mode:hover {
+  background-color: #dc2626;
+}
+
+#tasks {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+#task-input-container {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+#task-input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #4b5563;
+  background: var(--card-bg);
+  color: white;
+  font-family: inherit;
+  outline: none;
+}
+
+#task-input:focus {
+  border-color: var(--primary);
+}
+
+button#add {
+  background-color: #3f3f46;
+  color: white;
+  border: none;
+  padding: 0 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+button#add:hover {
+  background-color: #52525b;
+}
+
+ul {
   list-style: none;
   padding: 0;
+  margin: 0;
+  overflow-y: auto;
+  flex: 1;
 }
 
-#task-list li {
+li {
+  background: var(--card-bg);
+  margin-bottom: 8px;
+  padding: 10px 12px;
+  border-radius: 8px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: #fff;
-  margin: 5px 0;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  animation: fadeIn 0.2s ease-out;
 }
 
-#task-list li button {
-  background: #e74c3c;
-  padding: 4px 8px;
+.delete-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.delete-btn:hover {
+  color: var(--danger);
+  background: rgba(239, 68, 68, 0.1);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 3px;
 }

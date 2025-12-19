@@ -1,12 +1,10 @@
-const TIMER_DURATION = 25 * 60 * 1000; // 25 minutes in ms
-const TIMER_KEY = "studentBuddyTimerEnd";
+const TIMER_DURATION = 25 * 60 * 1000;
 
 let timerDisplay = document.querySelector("#timer-display");
 let startBtn = document.querySelector("#start");
 let taskInput = document.querySelector("#task-input");
 let taskList = document.querySelector("#task-list");
 let addBtn = document.querySelector("#add");
-let tasks = [];
 
 let timerInterval = null;
 
@@ -17,75 +15,73 @@ function msToMMSS(ms) {
     const totalSeconds = Math.floor(ms / 1000);
     const minutes = Math.floor(totalSeconds / 60);
     const seconds = totalSeconds % 60;
-    return `${minutes.toString().padStart(2, "0")}:${seconds
-        .toString()
-        .padStart(2, "0")}`;
+    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 }
 
-function updateDisplayLoop(endTime) {
-    // Clear any existing interval
+function startDisplayLoop(endTime) {
     if (timerInterval) clearInterval(timerInterval);
 
     function tick() {
-        const now = Date.now();
-        const remaining = endTime - now;
-
+        const remaining = endTime - Date.now();
         if (remaining <= 0) {
             timerDisplay.innerText = "00:00";
             clearInterval(timerInterval);
             timerInterval = null;
-
-            // Clear saved timer
-            chrome.storage.sync.remove(TIMER_KEY);
-
-            alert("Take a break!");
+            setUIState("IDLE");
             return;
         }
-
         timerDisplay.innerText = msToMMSS(remaining);
     }
 
-    tick(); // update immediately
+    tick();
     timerInterval = setInterval(tick, 1000);
 }
 
-// When popup opens, restore timer state
-function restoreTimer() {
-    chrome.storage.sync.get([TIMER_KEY], (result) => {
-        const endTime = result[TIMER_KEY];
-
-        if (!endTime) {
-            // No active timer
-            timerDisplay.innerText = msToMMSS(TIMER_DURATION);
-            return;
-        }
-
-        const remaining = endTime - Date.now();
-
-        if (remaining <= 0) {
-            // Timer has already finished
-            timerDisplay.innerText = "00:00";
-            chrome.storage.sync.remove(TIMER_KEY);
-        } else {
-            // Resume countdown display
-            updateDisplayLoop(endTime);
-        }
-    });
+function setUIState(state) {
+    if (state === "RUNNING") {
+        startBtn.textContent = "Stop / Give Up";
+        startBtn.classList.add("stop-mode");
+    } else {
+        startBtn.textContent = "Start Focus";
+        startBtn.classList.remove("stop-mode");
+        timerDisplay.innerText = "25:00";
+        if (timerInterval) clearInterval(timerInterval);
+    }
 }
 
-// Start button
-startBtn.addEventListener("click", () => {
-    const endTime = Date.now() + TIMER_DURATION;
-
-    chrome.storage.sync.set({ [TIMER_KEY]: endTime }, () => {
-        updateDisplayLoop(endTime);
-    });
+// Initialize
+chrome.runtime.sendMessage({ type: "GET_STATUS" }, (response) => {
+    if (response.timerState === "RUNNING") {
+        setUIState("RUNNING");
+        startDisplayLoop(response.endTime);
+    } else {
+        setUIState("IDLE");
+    }
 });
 
-// Call once when popup loads
-restoreTimer();
+// Button Handler
+startBtn.addEventListener("click", () => {
+    // Check current state via button text/class or just ask background? 
+    // Optimistic UI update is faster.
+    const isRunning = startBtn.classList.contains("stop-mode");
 
-// ---------- TASKS LOGIC (same as before) ----------
+    if (isRunning) {
+        // STOP
+        chrome.runtime.sendMessage({ type: "STOP_POMODORO" }, () => {
+            setUIState("IDLE");
+        });
+    } else {
+        // START
+        chrome.runtime.sendMessage({ type: "START_POMODORO" }, () => {
+            setUIState("RUNNING");
+            // approximate end time for immediate feedback, background has truth
+            startDisplayLoop(Date.now() + TIMER_DURATION);
+        });
+    }
+});
+
+
+// ---------- TASKS LOGIC ----------
 
 renderTasks();
 
@@ -93,27 +89,30 @@ addBtn.addEventListener("click", () => {
     let inputVal = taskInput.value.trim();
     if (!inputVal) return;
 
-    tasks.push(inputVal);
-    chrome.storage.sync.set({ buddytasks: tasks }).then(() => {
-        renderTasks();
-        taskInput.value = "";
+    chrome.storage.sync.get(["buddytasks"], (result) => {
+        const tasks = result.buddytasks || [];
+        tasks.push(inputVal);
+        chrome.storage.sync.set({ buddytasks: tasks }, () => {
+            renderTasks();
+            taskInput.value = "";
+        });
     });
 });
 
 function renderTasks() {
     taskList.innerHTML = "";
-    chrome.storage.sync.get(["buddytasks"]).then((result) => {
-        tasks = result.buddytasks || [];
+    chrome.storage.sync.get(["buddytasks"], (result) => {
+        const tasks = result.buddytasks || [];
         tasks.forEach((element) => {
             let li = document.createElement("li");
             li.textContent = element;
 
             let delBtn = document.createElement("button");
-            delBtn.textContent = "X";
+            delBtn.textContent = "✖";
+            delBtn.className = "delete-btn";
             delBtn.onclick = () => {
-                tasks = tasks.filter((t) => t !== element);
-                chrome.storage.sync.set({ buddytasks: tasks });
-                li.remove();
+                const newTasks = tasks.filter((t) => t !== element);
+                chrome.storage.sync.set({ buddytasks: newTasks }, renderTasks);
             };
 
             li.appendChild(delBtn);
